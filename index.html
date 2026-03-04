@@ -79,19 +79,19 @@
         <a-light type="ambient" intensity="0.8" color="#ffffff"></a-light>
         <a-light type="directional" intensity="0.6" position="5 10 7"></a-light>
         
-        <!-- キャラクター画像（回転） -->
-        <a-image 
+        <!-- キャラクター画像（プレーン・透過対応） -->
+        <a-plane 
             id="character"
-            src="./assets/images/kanoko.png"
             position="0 0.8 -3"
             scale="1.6 1.6 1"
-            animation="property: rotation; to: 0 360 0; dur: 6000; loop: true; easing: linear">
-        </a-image>
+            animation="property: rotation; to: 0 360 0; dur: 6000; loop: true; easing: linear"
+            material="src: ./assets/images/kanoko.png; alphaTest: 0.5; transparent: true; side: double;">
+        </a-plane>
         
         <!-- 名前 -->
         <a-text 
             value="いとどめ"
-            position="0 -0.2 -2"
+            position="0 -0.2 -1"
             scale="1.5 1.5 1"
             align="center"
             color="#ffffff"
@@ -101,7 +101,7 @@
         <!-- 職業 -->
         <a-text 
             value="Illustrator / Manga Creator"
-            position="0 -0.6 -2"
+            position="0 -0.6 -1"
             scale="0.8 0.8 1"
             align="center"
             color="#aaaaaa"
@@ -111,7 +111,7 @@
         <!-- ステータステキスト -->
         <a-text 
             value="Self-published Manga Series"
-            position="0 -1.0 -2"
+            position="0 -1.0 -1"
             scale="0.6 0.6 1"
             align="center"
             color="#888888"
@@ -136,14 +136,15 @@
         let images = [];
         let currentIndex = 0;
         let rotationProgress = 0;
-        let hasFlipped = false;
+        let hasFlippedAt90 = false;   // 90度での切り替え
+        let hasFlippedAt270 = false;  // 270度での切り替え
+
         const IMAGE_DIR = './assets/images/';
 
         // images.json を読み込み
         fetch('./images.json')
             .then(res => res.json())
             .then(data => {
-                // ファイル名に assets/images/ プレフィックスを追加
                 images = data.images.map(img => IMAGE_DIR + img);
                 console.log(`✅ ${data.images.length} 個の画像をロード:`, data.images);
                 if (images.length === 0) {
@@ -170,29 +171,48 @@
                 const elapsed = (now - window.animationStartTime) % 6000;
                 rotationProgress = elapsed / 6000;
                 
-                // 180度（0.5）に達したら切り替え
-                if (rotationProgress >= 0.5 && !hasFlipped && images.length > 0) {
-                    hasFlipped = true;
+                // 90度（0.25）に達したら切り替え
+                if (rotationProgress >= 0.25 && rotationProgress < 0.3 && !hasFlippedAt90 && images.length > 0) {
+                    hasFlippedAt90 = true;
+                    hasFlippedAt270 = false; // リセット
                     switchImage();
+                    console.log(`🔄 90度で切り替え (進行度: ${rotationProgress.toFixed(2)})`);
+                }
+                
+                // 270度（0.75）に達したら切り替え
+                if (rotationProgress >= 0.75 && rotationProgress < 0.8 && !hasFlippedAt270 && images.length > 0) {
+                    hasFlippedAt270 = true;
+                    hasFlippedAt90 = false; // リセット
+                    switchImage();
+                    console.log(`🔄 270度で切り替え (進行度: ${rotationProgress.toFixed(2)})`);
                 }
                 
                 // リセット（次の周期へ）
-                if (rotationProgress < 0.1 && hasFlipped) {
-                    hasFlipped = false;
+                if (rotationProgress < 0.1) {
+                    hasFlippedAt90 = false;
+                    hasFlippedAt270 = false;
                     window.animationStartTime = null;
                 }
             }, 50);
         }
 
         function switchImage() {
-            if (images.length <= 1) return; // 画像が1枚以下なら処理不要
+            if (images.length <= 1) {
+                console.log('ℹ️ 画像が1枚以下のため切り替えなし');
+                return;
+            }
             
             const characterEl = document.getElementById('character');
             currentIndex = (currentIndex + 1) % images.length;
             const nextImage = images[currentIndex];
             
-            characterEl.setAttribute('src', nextImage);
-            console.log(`🔄 画像切り替え: [${currentIndex + 1}/${images.length}] ${nextImage}`);
+            if (!nextImage) {
+                console.error('❌ 次の画像がnullです:', currentIndex, images);
+                return;
+            }
+            
+            characterEl.setAttribute('material', `src: ${nextImage}; alphaTest: 0.5; transparent: true; side: double;`);
+            console.log(`✅ 画像切り替え: [${currentIndex + 1}/${images.length}] ${nextImage}`);
         }
     </script>
 </body>
