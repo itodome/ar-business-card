@@ -3,9 +3,9 @@ name: Generate images.json
 on:
   push:
     paths:
-      - '*.png'
-      - '*.jpg'
-      - '*.jpeg'
+      - 'assets/images/*.png'
+      - 'assets/images/*.jpg'
+      - 'assets/images/*.jpeg'
   workflow_dispatch:
 
 jobs:
@@ -27,16 +27,18 @@ jobs:
           import json
           import os
           
-          # フォルダ内の画像ファイルを取得
-          # ※ index.html や README.md などの非画像ファイルは除外
+          # assets/images/ フォルダ内の画像ファイルを取得
+          image_dir = 'assets/images'
           valid_extensions = ('.png', '.jpg', '.jpeg')
           
-          images = [
-              f for f in os.listdir('.')
-              if f.endswith(valid_extensions)
-          ]
-          
-          images.sort()
+          if os.path.exists(image_dir):
+              images = [
+                  f for f in os.listdir(image_dir)
+                  if f.endswith(valid_extensions)
+              ]
+              images.sort()
+          else:
+              images = []
           
           # images.json を生成
           with open('images.json', 'w', encoding='utf-8') as f:
@@ -59,7 +61,7 @@ jobs:
           else
             echo "📝 images.json を更新しています..."
             git add images.json
-            git commit -m "ci: auto-generate images.json from folder contents"
+            git commit -m "ci: auto-generate images.json from assets/images folder"
             git push origin HEAD:${{ github.ref }}
             echo "✅ プッシュ完了"
           fi

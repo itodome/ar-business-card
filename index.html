@@ -82,7 +82,7 @@
         <!-- キャラクター画像（回転） -->
         <a-image 
             id="character"
-            src="./kanoko.png"
+            src="./assets/images/kanoko.png"
             position="0 0.8 -2"
             scale="1.6 1.6 1"
             animation="property: rotation; to: 0 360 0; dur: 6000; loop: true; easing: linear">
@@ -137,13 +137,15 @@
         let currentIndex = 0;
         let rotationProgress = 0;
         let hasFlipped = false;
+        const IMAGE_DIR = './assets/images/';
 
         // images.json を読み込み
         fetch('./images.json')
             .then(res => res.json())
             .then(data => {
-                images = data.images;
-                console.log(`✅ ${images.length} 個の画像をロード:`, images);
+                // ファイル名に assets/images/ プレフィックスを追加
+                images = data.images.map(img => IMAGE_DIR + img);
+                console.log(`✅ ${data.images.length} 個の画像をロード:`, data.images);
                 if (images.length === 0) {
                     console.warn('⚠️ 画像リストが空です');
                 }
