@@ -80,11 +80,13 @@
         <a-light type="directional" intensity="0.7" position="5 10 7"></a-light>
         
         <!-- キャラクター画像（回転） -->
+        <!-- カメラの正面中央に配置 -->
+        <!-- position: x=0(中央左右), y=0(中央上下), z=-1.5(手元) -->
         <a-image 
             id="character"
             src="./assets/images/kanoko.png"
-            position="0 0 -2"
-            scale="2 2 1"
+            position="0 0 -1.5"
+            scale="2.5 2.5 1"
             animation="property: rotation; to: 0 360 0; dur: 6000; loop: true; easing: linear">
         </a-image>
     </a-scene>
@@ -106,41 +108,30 @@
         let images = [];
         let currentIndex = 0;
         let rotationProgress = 0;
-        let hasFlippedLeft = false;   // 左側（90度）で切り替わったか
-        let hasFlippedRight = false;  // 右側（270度）で切り替わったか
+        let hasFlippedLeft = false;
+        let hasFlippedRight = false;
 
         const IMAGE_DIR = './assets/images/';
+        const characterEl = document.getElementById('character');
 
         // images.json を読み込み
-        const imagesLoadedPromise = fetch('./images.json')
+        fetch('./images.json')
             .then(res => res.json())
             .then(data => {
                 images = data.images.map(img => IMAGE_DIR + img);
                 console.log(`✅ ${data.images.length} 個の画像をロード:`, data.images);
                 
-                // 初期画像を設定
+                // 初期画像をすぐに設定（アニメーションはもう動いてる）
                 if (images.length > 0) {
-                    document.getElementById('character').setAttribute('src', images[0]);
+                    characterEl.setAttribute('src', images[0]);
                 }
                 
-                return true;
+                // 画像切り替え機能を開始
+                setupImageRotation();
             })
-            .catch(err => {
-                console.error('❌ images.json の読み込み失敗:', err);
-                return false;
-            });
-
-        // A-Frame シーンが読み込まれたら開始
-        document.querySelector('a-scene').addEventListener('loaded', () => {
-            imagesLoadedPromise.then(success => {
-                if (success) {
-                    setupImageRotation();
-                }
-            });
-        });
+            .catch(err => console.error('❌ images.json の読み込み失敗:', err));
 
         function setupImageRotation() {
-            const characterEl = document.getElementById('character');
             let cycleStartTime = Date.now();
             
             // 定期的に進行度をチェック
@@ -172,7 +163,6 @@
         function switchImage() {
             if (images.length <= 1) return;
             
-            const characterEl = document.getElementById('character');
             currentIndex = (currentIndex + 1) % images.length;
             const nextImage = images[currentIndex];
             
