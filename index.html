@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>いとどめ - AR Business Card</title>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        a-scene {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* UIオーバーレイ */
+        #ui-overlay {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-size: 12px;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        
+        #links-container {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+        
+        .social-link {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        
+        .social-link:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .portfolio { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .twitter { background: #1DA1F2; color: white; }
+        .github { background: #333; color: white; }
+    </style>
+</head>
+<body>
+    <a-scene background="color: #1a1a2e" ar-hit-test intersection-observer>
+        <!-- ライティング -->
+        <a-light type="ambient" intensity="0.8" color="#ffffff"></a-light>
+        <a-light type="directional" intensity="0.6" position="5 10 7"></a-light>
+        
+        <!-- キャラクター画像（回転） -->
+        <a-image 
+            id="character"
+            src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAB+AH4DASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWm5ydnqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlbaWmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD7/KKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD//Z"
+            position="0 0.8 -2"
+            scale="1.6 1.6 1"
+            animation="property: rotation; to: 0 360 0; dur: 6000; loop: true; easing: linear">
+        </a-image>
+        
+        <!-- 名前 -->
+        <a-text 
+            value="いとどめ"
+            position="0 -0.2 -2"
+            scale="1.5 1.5 1"
+            align="center"
+            color="#ffffff"
+            font="https://cdn.aframe.io/fonts/Roboto-msdf.json">
+        </a-text>
+        
+        <!-- 職業 -->
+        <a-text 
+            value="Illustrator / Manga Creator"
+            position="0 -0.6 -2"
+            scale="0.8 0.8 1"
+            align="center"
+            color="#aaaaaa"
+            font="https://cdn.aframe.io/fonts/Roboto-msdf.json">
+        </a-text>
+        
+        <!-- ステータステキスト -->
+        <a-text 
+            value="Self-published Manga Series"
+            position="0 -1.0 -2"
+            scale="0.6 0.6 1"
+            align="center"
+            color="#888888"
+            font="https://cdn.aframe.io/fonts/Roboto-msdf.json">
+        </a-text>
+    </a-scene>
+    
+    <!-- UI オーバーレイ -->
+    <div id="ui-overlay">
+        📱 Tap below for links
+    </div>
+    
+    <!-- リンク -->
+    <div id="links-container">
+        <a href="https://xfolio.jp/portfolio/it0dm" target="_blank" rel="noopener noreferrer" class="social-link portfolio" title="Portfolio">🎨</a>
+        <a href="https://x.com/it0dm" target="_blank" rel="noopener noreferrer" class="social-link twitter" title="Twitter/X">𝕏</a>
+        <a href="/cdn-cgi/l/email-protection#94e4f5e3f8fbe3fafdf5d4f3f9f5fdf8baf7fbf9" class="social-link github" title="Cont
