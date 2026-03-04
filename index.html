@@ -79,16 +79,16 @@
         <a-light type="ambient" intensity="0.8" color="#ffffff"></a-light>
         <a-light type="directional" intensity="0.6" position="5 10 7"></a-light>
         
-        <!-- キャラクター画像（プレーン・透過対応） -->
-        <a-plane 
+        <!-- キャラクター画像（回転・背後に配置） -->
+        <a-image 
             id="character"
-            position="0 0.8 -3"
+            src="./assets/images/kanoko.png"
+            position="0 0.8 -5"
             scale="1.6 1.6 1"
-            animation="property: rotation; to: 0 360 0; dur: 6000; loop: true; easing: linear"
-            material="src: ./assets/images/kanoko.png; alphaTest: 0.5; transparent: true; side: double;">
-        </a-plane>
+            animation="property: rotation; to: 0 360 0; dur: 6000; loop: true; easing: linear">
+        </a-image>
         
-        <!-- 名前 -->
+        <!-- 名前（手前に配置） -->
         <a-text 
             value="いとどめ"
             position="0 -0.2 -1"
@@ -98,7 +98,7 @@
             font="https://cdn.aframe.io/fonts/Roboto-msdf.json">
         </a-text>
         
-        <!-- 職業 -->
+        <!-- 職業（手前に配置） -->
         <a-text 
             value="Illustrator / Manga Creator"
             position="0 -0.6 -1"
@@ -108,7 +108,7 @@
             font="https://cdn.aframe.io/fonts/Roboto-msdf.json">
         </a-text>
         
-        <!-- ステータステキスト -->
+        <!-- ステータステキスト（手前に配置） -->
         <a-text 
             value="Self-published Manga Series"
             position="0 -1.0 -1"
@@ -136,83 +136,82 @@
         let images = [];
         let currentIndex = 0;
         let rotationProgress = 0;
-        let hasFlippedAt90 = false;   // 90度での切り替え
-        let hasFlippedAt270 = false;  // 270度での切り替え
+        let hasFlippedLeft = false;   // 左側（90度）で切り替わったか
+        let hasFlippedRight = false;  // 右側（270度）で切り替わったか
 
         const IMAGE_DIR = './assets/images/';
 
-        // images.json を読み込み
-        fetch('./images.json')
+        // images.json を読み込み（アニメーション開始前に読み込み完了を待つ）
+        const imagesLoadedPromise = fetch('./images.json')
             .then(res => res.json())
             .then(data => {
+                // ファイル名に assets/images/ プレフィックスを付加
                 images = data.images.map(img => IMAGE_DIR + img);
                 console.log(`✅ ${data.images.length} 個の画像をロード:`, data.images);
-                if (images.length === 0) {
-                    console.warn('⚠️ 画像リストが空です');
+                
+                // 初期画像を設定
+                if (images.length > 0) {
+                    document.getElementById('character').setAttribute('src', images[0]);
                 }
+                
+                return true;
             })
-            .catch(err => console.error('❌ images.json の読み込み失敗:', err));
+            .catch(err => {
+                console.error('❌ images.json の読み込み失敗:', err);
+                return false;
+            });
 
         // A-Frame シーンが読み込まれたら開始
         document.querySelector('a-scene').addEventListener('loaded', () => {
-            setupImageRotation();
+            imagesLoadedPromise.then(success => {
+                if (success) {
+                    setupImageRotation();
+                }
+            });
         });
 
         function setupImageRotation() {
             const characterEl = document.getElementById('character');
+            let cycleStartTime = Date.now();
             
-            // 定期的に進行度をチェック（50msごと）
+            // 定期的に進行度をチェック（33msごと ≈ 30fps）
             setInterval(() => {
                 const now = Date.now();
-                if (!window.animationStartTime) {
-                    window.animationStartTime = now;
-                }
+                const elapsed = (now - cycleStartTime) % 6000;  // 6秒のサイクル
+                rotationProgress = elapsed / 6000;  // 0.0 ~ 1.0
                 
-                const elapsed = (now - window.animationStartTime) % 6000;
-                rotationProgress = elapsed / 6000;
+                // デバッグ出力
+                // console.log(`🔄 進行度: ${rotationProgress.toFixed(3)} (${Math.round(rotationProgress * 360)}°)`);
                 
-                // 90度（0.25）に達したら切り替え
-                if (rotationProgress >= 0.25 && rotationProgress < 0.3 && !hasFlippedAt90 && images.length > 0) {
-                    hasFlippedAt90 = true;
-                    hasFlippedAt270 = false; // リセット
+                // 真横（90度 = 0.25進行度）で切り替え
+                if (rotationProgress >= 0.24 && rotationProgress < 0.26 && !hasFlippedLeft && images.length > 0) {
+                    hasFlippedLeft = true;
                     switchImage();
-                    console.log(`🔄 90度で切り替え (進行度: ${rotationProgress.toFixed(2)})`);
                 }
                 
-                // 270度（0.75）に達したら切り替え
-                if (rotationProgress >= 0.75 && rotationProgress < 0.8 && !hasFlippedAt270 && images.length > 0) {
-                    hasFlippedAt270 = true;
-                    hasFlippedAt90 = false; // リセット
+                // 反対側（270度 = 0.75進行度）で切り替え
+                if (rotationProgress >= 0.74 && rotationProgress < 0.76 && !hasFlippedRight && images.length > 0) {
+                    hasFlippedRight = true;
                     switchImage();
-                    console.log(`🔄 270度で切り替え (進行度: ${rotationProgress.toFixed(2)})`);
                 }
                 
-                // リセット（次の周期へ）
-                if (rotationProgress < 0.1) {
-                    hasFlippedAt90 = false;
-                    hasFlippedAt270 = false;
-                    window.animationStartTime = null;
+                // リセット（次のサイクルへ）
+                if (rotationProgress < 0.05) {
+                    hasFlippedLeft = false;
+                    hasFlippedRight = false;
                 }
-            }, 50);
+            }, 33);
         }
 
         function switchImage() {
-            if (images.length <= 1) {
-                console.log('ℹ️ 画像が1枚以下のため切り替えなし');
-                return;
-            }
+            if (images.length <= 1) return;  // 画像が1枚以下なら処理不要
             
             const characterEl = document.getElementById('character');
             currentIndex = (currentIndex + 1) % images.length;
             const nextImage = images[currentIndex];
             
-            if (!nextImage) {
-                console.error('❌ 次の画像がnullです:', currentIndex, images);
-                return;
-            }
-            
-            characterEl.setAttribute('material', `src: ${nextImage}; alphaTest: 0.5; transparent: true; side: double;`);
-            console.log(`✅ 画像切り替え: [${currentIndex + 1}/${images.length}] ${nextImage}`);
+            characterEl.setAttribute('src', nextImage);
+            console.log(`🔄 画像切り替え: [${currentIndex + 1}/${images.length}]`);
         }
     </script>
 </body>
