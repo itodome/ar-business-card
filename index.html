@@ -128,4 +128,70 @@
     <div id="links-container">
         <a href="https://xfolio.jp/portfolio/it0dm" target="_blank" rel="noopener noreferrer" class="social-link portfolio" title="Portfolio">🎨</a>
         <a href="https://x.com/it0dm" target="_blank" rel="noopener noreferrer" class="social-link twitter" title="Twitter/X">𝕏</a>
-        <a href="/cdn-cgi/l/email-protection#94e4f5e3f8fbe3fafdf5d4f3f9f5fdf8baf7fbf9" class="social-link github" title="Cont
+        <a href="mailto:pawlownia@gmail.com" class="social-link github" title="Contact">📧</a>
+    </div>
+
+    <script>
+        // 複数画像対応：images.json から動的に画像リストを読み込み
+        let images = [];
+        let currentIndex = 0;
+        let rotationProgress = 0;
+        let hasFlipped = false;
+
+        // images.json を読み込み
+        fetch('./images.json')
+            .then(res => res.json())
+            .then(data => {
+                images = data.images;
+                console.log(`✅ ${images.length} 個の画像をロード:`, images);
+                if (images.length === 0) {
+                    console.warn('⚠️ 画像リストが空です');
+                }
+            })
+            .catch(err => console.error('❌ images.json の読み込み失敗:', err));
+
+        // A-Frame シーンが読み込まれたら開始
+        document.querySelector('a-scene').addEventListener('loaded', () => {
+            setupImageRotation();
+        });
+
+        function setupImageRotation() {
+            const characterEl = document.getElementById('character');
+            
+            // 定期的に進行度をチェック（50msごと）
+            setInterval(() => {
+                const now = Date.now();
+                if (!window.animationStartTime) {
+                    window.animationStartTime = now;
+                }
+                
+                const elapsed = (now - window.animationStartTime) % 6000;
+                rotationProgress = elapsed / 6000;
+                
+                // 180度（0.5）に達したら切り替え
+                if (rotationProgress >= 0.5 && !hasFlipped && images.length > 0) {
+                    hasFlipped = true;
+                    switchImage();
+                }
+                
+                // リセット（次の周期へ）
+                if (rotationProgress < 0.1 && hasFlipped) {
+                    hasFlipped = false;
+                    window.animationStartTime = null;
+                }
+            }, 50);
+        }
+
+        function switchImage() {
+            if (images.length <= 1) return; // 画像が1枚以下なら処理不要
+            
+            const characterEl = document.getElementById('character');
+            currentIndex = (currentIndex + 1) % images.length;
+            const nextImage = images[currentIndex];
+            
+            characterEl.setAttribute('src', nextImage);
+            console.log(`🔄 画像切り替え: [${currentIndex + 1}/${images.length}] ${nextImage}`);
+        }
+    </script>
+</body>
+</html>
