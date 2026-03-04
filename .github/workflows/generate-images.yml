@@ -1,0 +1,65 @@
+name: Generate images.json
+
+on:
+  push:
+    paths:
+      - '*.png'
+      - '*.jpg'
+      - '*.jpeg'
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Generate images.json
+        run: |
+          python3 << 'EOF'
+          import json
+          import os
+          
+          # フォルダ内の画像ファイルを取得
+          # ※ index.html や README.md などの非画像ファイルは除外
+          valid_extensions = ('.png', '.jpg', '.jpeg')
+          
+          images = [
+              f for f in os.listdir('.')
+              if f.endswith(valid_extensions)
+          ]
+          
+          images.sort()
+          
+          # images.json を生成
+          with open('images.json', 'w', encoding='utf-8') as f:
+              json.dump({'images': images}, f, indent=2, ensure_ascii=False)
+          
+          print(f"✅ {len(images)} 個の画像を検出")
+          print("画像一覧:")
+          for img in images:
+              print(f"  - {img}")
+          EOF
+
+      - name: Commit and push
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          
+          # 変更があるかチェック
+          if git diff --quiet images.json; then
+            echo "✓ images.json に変更がありません"
+          else
+            echo "📝 images.json を更新しています..."
+            git add images.json
+            git commit -m "ci: auto-generate images.json from folder contents"
+            git push origin HEAD:${{ github.ref }}
+            echo "✅ プッシュ完了"
+          fi
